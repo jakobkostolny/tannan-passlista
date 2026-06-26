@@ -344,7 +344,7 @@ const WEEK_DATA = buildDays();
 const TOTAL_SLOTS = WEEK_DATA.reduce((a,w)=>a+w.days.length,0) * PASSES.length;
 
 let signups = {};
-let openWeekIndex = 0;
+let openWeekIndex = -1;
 
 function slotKey(dayKey, passNr){ return `${dayKey}__${passNr}`; }
 
