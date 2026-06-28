@@ -160,42 +160,35 @@
   }
   .day:first-child .day-head{ border-top:none; padding-top:0; }
 
-  table.passes{
-    width:100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
+  .pass-card{
+    padding: 0.7rem 0;
+    border-bottom: 1px dotted var(--line);
   }
-  table.passes td{
-    padding: 0.45rem 0.3rem;
-    border-bottom: 1px solid var(--line);
-    vertical-align: middle;
-  }
-  table.passes tr:last-child td{ border-bottom:none; }
-  .pnr{
+  .pass-card:last-child{ border-bottom:none; }
+  .pass-head{
+    display:flex;
+    align-items:baseline;
+    gap: 0.5rem;
     font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
     color: var(--ink-soft);
-    width: 1.6rem;
+    margin-bottom: 0.4rem;
   }
-  .ptime{
-    font-family: 'IBM Plex Mono', monospace;
-    width: 7.5rem;
-    color: var(--ink);
-  }
-  .pname{
-    text-align:left;
-  }
+  .pass-head .pnr{ color: var(--green-deep); font-weight: 600; }
+
   .slot-filled{
     background: var(--sage);
     border: 1px solid var(--sage-line);
-    border-radius: 6px;
-    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
     display:flex;
-    align-items:center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.6rem;
     font-size: 0.88rem;
   }
-  .slot-filled .name{ font-weight: 600; color: var(--green-deep); }
+  .slot-filled .name{ font-weight: 700; color: var(--green-deep); display:block; margin-bottom: 0.25rem; }
+  .slot-filled .counts{ color: var(--ink-soft); font-size: 0.82rem; line-height: 1.5; }
   .remove-btn{
     background: none;
     border: none;
@@ -205,34 +198,45 @@
     text-decoration: underline;
     padding: 0;
     font-family: inherit;
+    white-space: nowrap;
   }
   .remove-btn:hover{ color: var(--orange-deep); }
 
-  .slot-empty{
-    display:flex;
-    gap: 0.4rem;
+  .field-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.6rem;
   }
-  .slot-empty input{
-    flex:1;
+  .field-grid .field-full{ grid-column: 1 / -1; }
+  .field label{
+    display:block;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.2rem;
+  }
+  .field input{
+    width:100%;
     border: 1px solid var(--line);
     border-radius: 6px;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.88rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.9rem;
     font-family: inherit;
     background: #FFFDF7;
   }
-  .slot-empty input:focus{ outline: 2px solid var(--sage-line); border-color: var(--green); }
+  .field input:focus{ outline: 2px solid var(--sage-line); border-color: var(--green); }
   .save-btn{
     background: var(--orange);
     color: #FFF8EF;
     border: none;
     border-radius: 6px;
-    padding: 0.35rem 0.8rem;
+    padding: 0.45rem 0.9rem;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
+    margin-top: 0.55rem;
+    width:100%;
   }
   .save-btn:hover{ background: var(--orange-deep); }
   .save-btn:disabled{ opacity: 0.45; cursor: default; }
@@ -265,8 +269,6 @@
 <header class="top">
   <div class="wrap">
     <p class="eyebrow">Fältschema · trafikräkning</p>
-    <h1>Räkning av bilar över Tännån</h1>
-    <p class="sub">Skriv upp dig på ett pass nedan. Vem som helst med länken kan se och ändra listan.</p>
     <div class="counter-row">
       <div class="odometer" id="odometer">
         <div class="digit">0</div><div class="digit">0</div><div class="digit">0</div>
@@ -419,30 +421,37 @@ function render(){
       dayHead.textContent = day.display;
       dayEl.appendChild(dayHead);
 
-      const table = document.createElement("table");
-      table.className = "passes";
+      const list = document.createElement("div");
+      list.className = "pass-list";
 
       PASSES.forEach(pass=>{
         const key = slotKey(day.key, pass.nr);
-        const name = signups[key];
+        const entry = signups[key];
 
-        const tr = document.createElement("tr");
-        const tdNr = document.createElement("td");
-        tdNr.className = "pnr";
-        tdNr.textContent = pass.nr;
-        const tdTime = document.createElement("td");
-        tdTime.className = "ptime";
-        tdTime.textContent = pass.time;
-        const tdName = document.createElement("td");
-        tdName.className = "pname";
+        const card = document.createElement("div");
+        card.className = "pass-card";
 
-        if(name){
-          tdName.innerHTML = `
+        const head = document.createElement("div");
+        head.className = "pass-head";
+        head.innerHTML = `<span class="pnr">Pass ${pass.nr}</span><span>${pass.time}</span>`;
+        card.appendChild(head);
+
+        const body = document.createElement("div");
+
+        if(entry && entry.name){
+          body.innerHTML = `
             <div class="slot-filled">
-              <span class="name">${escapeHtml(name)}</span>
+              <div>
+                <span class="name">${escapeHtml(entry.name)}</span>
+                <div class="counts">
+                  Antal passager: ${entry.passages ? escapeHtml(entry.passages) : "—"}<br>
+                  Antal passagerare per bil: ${entry.perCar ? escapeHtml(entry.perCar) : "—"}<br>
+                  Antal bussar, tjänstefordon, IDP-fordon: ${entry.buses ? escapeHtml(entry.buses) : "—"}
+                </div>
+              </div>
               <button class="remove-btn" type="button">ta bort</button>
             </div>`;
-          tdName.querySelector(".remove-btn").addEventListener("click", async ()=>{
+          body.querySelector(".remove-btn").addEventListener("click", async ()=>{
             delete signups[key];
             const ok = await saveSignups();
             setStatus(ok ? "Borttaget." : "Kunde inte spara, försök igen.", !ok);
@@ -450,21 +459,44 @@ function render(){
             render();
           });
         }else{
-          tdName.innerHTML = `
-            <div class="slot-empty">
-              <input type="text" placeholder="Ditt namn" maxlength="40">
-              <button class="save-btn" type="button">Spara</button>
-            </div>`;
-          const input = tdName.querySelector("input");
-          const btn = tdName.querySelector(".save-btn");
+          body.innerHTML = `
+            <div class="field-grid">
+              <div class="field field-full">
+                <label>Namn</label>
+                <input type="text" class="f-name" placeholder="Ditt namn" maxlength="40">
+              </div>
+              <div class="field">
+                <label>Antal passager</label>
+                <input type="text" class="f-passages" inputmode="numeric" placeholder="t.ex. 42">
+              </div>
+              <div class="field">
+                <label>Antal passagerare per bil</label>
+                <input type="text" class="f-percar" inputmode="numeric" placeholder="t.ex. 1.5">
+              </div>
+              <div class="field field-full">
+                <label>Antal bussar, tjänstefordon, IDP-fordon</label>
+                <input type="text" class="f-buses" inputmode="numeric" placeholder="t.ex. 3">
+              </div>
+            </div>
+            <button class="save-btn" type="button">Spara</button>`;
+          const nameInput = body.querySelector(".f-name");
+          const passagesInput = body.querySelector(".f-passages");
+          const perCarInput = body.querySelector(".f-percar");
+          const busesInput = body.querySelector(".f-buses");
+          const btn = body.querySelector(".save-btn");
           const doSave = async ()=>{
-            const val = input.value.trim();
-            if(!val) { input.focus(); return; }
+            const name = nameInput.value.trim();
+            if(!name){ nameInput.focus(); return; }
             btn.disabled = true;
-            signups[key] = val;
+            signups[key] = {
+              name,
+              passages: passagesInput.value.trim(),
+              perCar: perCarInput.value.trim(),
+              buses: busesInput.value.trim()
+            };
             const ok = await saveSignups();
             if(ok){
-              setStatus(`Sparat: ${val} — pass ${pass.nr}, ${day.display}.`, false);
+              setStatus(`Sparat: ${name} — pass ${pass.nr}, ${day.display}.`, false);
               updateCounter();
               render();
             }else{
@@ -474,16 +506,16 @@ function render(){
             }
           };
           btn.addEventListener("click", doSave);
-          input.addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSave(); });
+          [nameInput, passagesInput, perCarInput, busesInput].forEach(inp=>{
+            inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSave(); });
+          });
         }
 
-        tr.appendChild(tdNr);
-        tr.appendChild(tdTime);
-        tr.appendChild(tdName);
-        table.appendChild(tr);
+        card.appendChild(body);
+        list.appendChild(card);
       });
 
-      dayEl.appendChild(table);
+      dayEl.appendChild(list);
       body.appendChild(dayEl);
     });
 
