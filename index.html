@@ -189,6 +189,24 @@
   }
   .slot-filled .name{ font-weight: 700; color: var(--green-deep); display:block; margin-bottom: 0.25rem; }
   .slot-filled .counts{ color: var(--ink-soft); font-size: 0.82rem; line-height: 1.5; }
+  .slot-actions{
+    display:flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+  .edit-btn{
+    background: none;
+    border: none;
+    color: var(--green-deep);
+    cursor: pointer;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    padding: 0;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .edit-btn:hover{ color: var(--orange-deep); }
   .remove-btn{
     background: none;
     border: none;
@@ -240,6 +258,24 @@
   }
   .save-btn:hover{ background: var(--orange-deep); }
   .save-btn:disabled{ opacity: 0.45; cursor: default; }
+  .form-actions{
+    display:flex;
+    gap: 0.5rem;
+    margin-top: 0.55rem;
+  }
+  .form-actions .save-btn{ margin-top:0; flex:1; }
+  .cancel-btn{
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 6px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .cancel-btn:hover{ background: #FBF8EF; }
 
   .status-line{
     text-align:center;
@@ -353,6 +389,7 @@ const TOTAL_SLOTS = WEEK_DATA.reduce((a,w)=>a+w.days.length,0) * PASSES.length;
 
 let signups = {};
 let openWeekIndex = -1;
+let editingKey = null;
 
 function slotKey(dayKey, passNr){ return `${dayKey}__${passNr}`; }
 
@@ -452,7 +489,7 @@ function render(){
 
         const body = document.createElement("div");
 
-        if(entry && entry.name){
+        if(entry && entry.name && editingKey !== key){
           body.innerHTML = `
             <div class="slot-filled">
               <div>
@@ -463,8 +500,15 @@ function render(){
                   Antal bussar, tjänstefordon, IDP-fordon: ${entry.buses ? escapeHtml(entry.buses) : "—"}
                 </div>
               </div>
-              <button class="remove-btn" type="button">ta bort</button>
+              <div class="slot-actions">
+                <button class="edit-btn" type="button">ändra siffror</button>
+                <button class="remove-btn" type="button">ta bort</button>
+              </div>
             </div>`;
+          body.querySelector(".edit-btn").addEventListener("click", ()=>{
+            editingKey = key;
+            render();
+          });
           body.querySelector(".remove-btn").addEventListener("click", async ()=>{
             delete signups[key];
             const ok = await saveSignups();
@@ -473,26 +517,30 @@ function render(){
             render();
           });
         }else{
+          const isEdit = !!(entry && entry.name && editingKey === key);
           body.innerHTML = `
             <div class="field-grid">
               <div class="field field-full">
                 <label>Namn</label>
-                <input type="text" class="f-name" placeholder="Ditt namn" maxlength="40">
+                <input type="text" class="f-name" placeholder="Ditt namn" maxlength="40" value="${isEdit ? escapeHtml(entry.name) : ""}">
               </div>
               <div class="field">
                 <label>Antal passager</label>
-                <input type="text" class="f-passages" inputmode="numeric">
+                <input type="text" class="f-passages" inputmode="numeric" value="${isEdit && entry.passages ? escapeHtml(entry.passages) : ""}">
               </div>
               <div class="field">
                 <label>Antal passagerare per bil</label>
-                <input type="text" class="f-percar" inputmode="numeric">
+                <input type="text" class="f-percar" inputmode="numeric" value="${isEdit && entry.perCar ? escapeHtml(entry.perCar) : ""}">
               </div>
               <div class="field field-full">
                 <label>Antal bussar, tjänstefordon, IDP-fordon</label>
-                <input type="text" class="f-buses" inputmode="numeric">
+                <input type="text" class="f-buses" inputmode="numeric" value="${isEdit && entry.buses ? escapeHtml(entry.buses) : ""}">
               </div>
             </div>
-            <button class="save-btn" type="button">Spara</button>`;
+            <div class="form-actions">
+              <button class="save-btn" type="button">Spara</button>
+              ${isEdit ? '<button class="cancel-btn" type="button">Avbryt</button>' : ""}
+            </div>`;
           const nameInput = body.querySelector(".f-name");
           const passagesInput = body.querySelector(".f-passages");
           const perCarInput = body.querySelector(".f-percar");
@@ -502,6 +550,7 @@ function render(){
             const name = nameInput.value.trim();
             if(!name){ nameInput.focus(); return; }
             btn.disabled = true;
+            const previous = signups[key];
             signups[key] = {
               name,
               passages: passagesInput.value.trim(),
@@ -510,16 +559,24 @@ function render(){
             };
             const ok = await saveSignups();
             if(ok){
-              setStatus(`Sparat: ${name} — pass ${pass.nr}, ${day.display}.`, false);
+              setStatus(isEdit ? `Uppdaterat: ${name} — pass ${pass.nr}, ${day.display}.` : `Sparat: ${name} — pass ${pass.nr}, ${day.display}.`, false);
+              editingKey = null;
               updateCounter();
               render();
             }else{
-              delete signups[key];
+              if(previous){ signups[key] = previous; } else { delete signups[key]; }
               btn.disabled = false;
               setStatus("Kunde inte spara, försök igen.", true);
             }
           };
           btn.addEventListener("click", doSave);
+          const cancelBtn = body.querySelector(".cancel-btn");
+          if(cancelBtn){
+            cancelBtn.addEventListener("click", ()=>{
+              editingKey = null;
+              render();
+            });
+          }
           [nameInput, passagesInput, perCarInput, busesInput].forEach(inp=>{
             inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSave(); });
           });
