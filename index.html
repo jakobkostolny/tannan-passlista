@@ -3,456 +3,542 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VM 2026 – Slutspelshjulet</title>
+<title>Räkning bilar över Tännån — passlista</title>
 <style>
   :root{
-    --bg:#0b0b0d;
-    --panel:#15151a;
-    --panel2:#1c1c22;
-    --gold:#d4af37;
-    --gold-soft:#f1d27a;
-    --line:#46464e;
-    --text:#eee;
-    --muted:#9a9a9f;
+    --paper: #F6F2E7;
+    --ink: #2B2B26;
+    --ink-soft: #5C5A4F;
+    --green: #2F4A38;
+    --green-deep: #1E3326;
+    --sage: #D8E2CC;
+    --sage-line: #A9BC95;
+    --orange: #C75A28;
+    --orange-deep: #8E3E1B;
+    --line: #D8D2C0;
+    --card: #FFFDF7;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing: border-box; }
   body{
     margin:0;
-    background:radial-gradient(circle at 50% 35%, #1a1610 0%, #0b0b0d 60%);
-    color:var(--text);
-    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', Arial, sans-serif;
+    line-height:1.5;
+    padding-bottom: 4rem;
   }
-  header{ text-align:center; padding:24px 16px 10px; }
-  header h1{
-    margin:0; font-size:1.4rem; letter-spacing:1px;
-    color:var(--gold-soft); text-shadow:0 0 18px rgba(212,175,55,.35);
-  }
-  header p{ margin:6px 0 0; color:var(--muted); font-size:.82rem; }
+  @font-face{ }
+  .wrap{ max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
 
-  .champion-banner{
-    display:none; max-width:420px; margin:14px auto 0; text-align:center;
-    background:linear-gradient(135deg,#2a2310,#1a1610);
-    border:1px solid var(--gold); border-radius:14px; padding:12px 18px;
-    box-shadow:0 0 30px rgba(212,175,55,.25);
+  header.top{
+    background: var(--green-deep);
+    color: #F1EEE0;
+    padding: 2.2rem 1.25rem 2.6rem;
+    border-bottom: 6px solid var(--orange);
   }
-  .champion-banner.show{ display:block; }
-  .champion-banner .label{ font-size:.7rem; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-  .champion-banner .name{ font-size:1.3rem; color:var(--gold-soft); font-weight:700; margin-top:2px; }
-
-  .toolbar{ display:flex; justify-content:center; gap:10px; margin:14px 0; flex-wrap:wrap; }
-  button.action{
-    background:var(--panel2); color:var(--text); border:1px solid var(--line);
-    border-radius:8px; padding:8px 14px; font-size:.82rem; cursor:pointer;
+  header.top .wrap{ position:relative; }
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #BFD2B3;
+    margin: 0 0 0.5rem;
   }
-  button.action:hover{ border-color:var(--gold); color:var(--gold-soft); }
-
-  .wheel-wrap{
-    overflow:auto;
-    padding:10px;
-    -webkit-overflow-scrolling:touch;
+  h1{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
-  .wheel-inner{
-    width:max-content;
-    margin:0 auto;
-  }
-  svg{ display:block; }
-  .team-icon{ cursor:pointer; }
-  .team-icon.empty{ cursor:default; }
-  .team-icon text{ pointer-events:none; user-select:none; }
-
-  .hint{
-    text-align:center; color:var(--muted); font-size:.78rem; margin:-4px 0 8px;
+  .sub{
+    color: #CBD6BE;
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 46ch;
   }
 
-  .score-section{
-    max-width:680px; margin:10px auto 50px; padding:0 14px;
+  .counter-row{
+    margin-top: 1.6rem;
+    display:flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
   }
-  .score-section h2{
-    font-size:.85rem; letter-spacing:1.5px; text-transform:uppercase;
-    color:var(--muted); border-bottom:1px solid var(--line); padding-bottom:6px; margin:26px 0 10px;
+  .odometer{
+    display:flex;
+    gap: 3px;
+    background: var(--green-deep);
+    padding: 4px;
   }
-  .score-row{
-    display:flex; align-items:center; gap:8px;
-    background:var(--panel); border:1px solid var(--line); border-radius:10px;
-    padding:8px 10px; margin-bottom:8px; font-size:.85rem;
+  .digit{
+    width: 26px;
+    height: 36px;
+    background: #11200F;
+    color: #C9F0AE;
+    font-size: 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border: 1px solid #0A1607;
   }
-  .score-row.pending{ opacity:.4; }
-  .score-row .side{ display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
-  .score-row .side.right{ justify-content:flex-end; }
-  .score-row .nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .score-row .nm.winner{ color:var(--gold-soft); font-weight:700; }
-  .score-row input{
-    width:32px; text-align:center; background:#0e0e11; border:1px solid var(--line);
-    color:var(--text); border-radius:5px; font-size:.85rem; padding:4px 0;
+  .counter-label{
+    font-size: 12px;
+    color: #BFD2B3;
+    letter-spacing: 0.04em;
   }
-  .score-row input:focus{ outline:none; border-color:var(--gold); }
-  .score-row .vs{ color:var(--muted); font-size:.7rem; padding:0 4px; }
 
-  footer{ text-align:center; color:var(--muted); font-size:.75rem; padding:6px 16px 36px; }
+  main{ padding-top: 1.75rem; }
+
+  .week{
+    margin-bottom: 1.1rem;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .week-head{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1.1rem;
+    background: var(--card);
+    border: none;
+    cursor: pointer;
+    text-align:left;
+    font-family: inherit;
+  }
+  .week-head:hover{ background: #FBF8EF; }
+  .week-title{
+    display:flex;
+    align-items:baseline;
+    gap: 0.6rem;
+  }
+  .week-title .label{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--green-deep);
+    font-size: 0.95rem;
+  }
+  .week-title .range{
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+  .week-meta{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .chev{
+    transition: transform 0.15s ease;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+  }
+  .week.open .chev{ transform: rotate(90deg); }
+  .week-body{
+    display:none;
+    border-top: 1px solid var(--line);
+    padding: 0.4rem 1.1rem 0.9rem;
+  }
+  .week.open .week-body{ display:block; }
+
+  .day{
+    margin: 0.85rem 0;
+  }
+  .day-head{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--green-deep);
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--line);
+  }
+  .day:first-child .day-head{ border-top:none; padding-top:0; }
+
+  .pass-card{
+    padding: 0.7rem 0;
+    border-bottom: 1px dotted var(--line);
+  }
+  .pass-card:last-child{ border-bottom:none; }
+  .pass-head{
+    display:flex;
+    align-items:baseline;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+  }
+  .pass-head .pnr{ color: var(--green-deep); font-weight: 600; }
+
+  .slot-filled{
+    background: var(--sage);
+    border: 1px solid var(--sage-line);
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
+    display:flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+  }
+  .slot-filled .name{ font-weight: 700; color: var(--green-deep); display:block; margin-bottom: 0.25rem; }
+  .slot-filled .counts{ color: var(--ink-soft); font-size: 0.82rem; line-height: 1.5; }
+  .remove-btn{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    padding: 0;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .remove-btn:hover{ color: var(--orange-deep); }
+
+  .field-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.6rem;
+  }
+  .field-grid .field-full{ grid-column: 1 / -1; }
+  .field label{
+    display:block;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.2rem;
+  }
+  .field input{
+    width:100%;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: #FFFDF7;
+  }
+  .field input:focus{ outline: 2px solid var(--sage-line); border-color: var(--green); }
+  .save-btn{
+    background: var(--orange);
+    color: #FFF8EF;
+    border: none;
+    border-radius: 6px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    margin-top: 0.55rem;
+    width:100%;
+  }
+  .save-btn:hover{ background: var(--orange-deep); }
+  .save-btn:disabled{ opacity: 0.45; cursor: default; }
+
+  .status-line{
+    text-align:center;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 1.5rem 0 0;
+    min-height: 1.2em;
+  }
+  .loading{
+    text-align:center;
+    padding: 3rem 1rem;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  footer{
+    text-align:center;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    margin-top: 2rem;
+    padding: 0 1.25rem;
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🏆 VM 2026 – Slutspelshjulet</h1>
-  <p>Tryck på en flagga för att skicka det laget vidare. Fyll i resultat i listan under hjulet.</p>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Fältschema · trafikräkning</p>
+    <div class="counter-row">
+      <div class="odometer" id="odometer">
+        <div class="digit">0</div><div class="digit">0</div><div class="digit">0</div>
+      </div>
+      <span class="counter-label" id="counterLabel">pass bokade av 210</span>
+    </div>
+  </div>
 </header>
 
-<div class="champion-banner" id="championBanner">
-  <div class="label">Världsmästare</div>
-  <div class="name" id="championName">—</div>
-</div>
+<main class="wrap" id="main">
+  <div class="loading" id="loading">Laddar passlistan …</div>
+</main>
 
-<div class="toolbar">
-  <button class="action" id="resetBtn">↺ Nollställ allt</button>
-  <button class="action" id="shareBtn">🔗 Kopiera länk med mina tips</button>
-</div>
+<p class="status-line" id="statusLine"></p>
 
-<p class="hint">Hjulet går att panorera/zooma om det inte ryms på skärmen.</p>
-
-<div class="wheel-wrap">
-  <div class="wheel-inner" id="wheelInner"></div>
-</div>
-
-<div class="score-section" id="scoreSection"></div>
-
-<footer>Inofficiellt fantipp-schema · VM 2026</footer>
+<footer>Ändringar sparas direkt och syns för alla som öppnar länken.</footer>
 
 <script>
-/* ====================== LAGDATA ====================== */
-const pairs = [
-  [{n:"Sverige",f:"🇸🇪"}, {n:"Frankrike",f:"🇫🇷"}],
-  [{n:"Paraguay",f:"🇵🇾"}, {n:"Tyskland",f:"🇩🇪"}],
-  [{n:"Brasilien",f:"🇧🇷"}, {n:"Japan",f:"🇯🇵"}],
-  [{n:"Elfenbenskusten",f:"🇨🇮"}, {n:"Norge",f:"🇳🇴"}],
-  [{n:"Mexiko",f:"🇲🇽"}, {n:"Ecuador",f:"🇪🇨"}],
-  [{n:"England",f:"🏴"}, {n:"DR Kongo",f:"🇨🇩"}],
-  [{n:"Argentina",f:"🇦🇷"}, {n:"Kap Verde",f:"🇨🇻"}],
-  [{n:"Australien",f:"🇦🇺"}, {n:"Egypten",f:"🇪🇬"}],
-  [{n:"Schweiz",f:"🇨🇭"}, {n:"Algeriet",f:"🇩🇿"}],
-  [{n:"Colombia",f:"🇨🇴"}, {n:"Ghana",f:"🇬🇭"}],
-  [{n:"Senegal",f:"🇸🇳"}, {n:"Belgien",f:"🇧🇪"}],
-  [{n:"Bosnien och Herzegovina",f:"🇧🇦"}, {n:"USA",f:"🇺🇸"}],
-  [{n:"Österrike",f:"🇦🇹"}, {n:"Spanien",f:"🇪🇸"}],
-  [{n:"Kroatien",f:"🇭🇷"}, {n:"Portugal",f:"🇵🇹"}],
-  [{n:"Marocko",f:"🇲🇦"}, {n:"Nederländerna",f:"🇳🇱"}],
-  [{n:"Kanada",f:"🇨🇦"}, {n:"Sydafrika",f:"🇿🇦"}]
+const WEEKS = [
+  { label: "Vecka 27", start: "2026-07-06", end: "2026-07-12" },
+  { label: "Vecka 28", start: "2026-07-13", end: "2026-07-19" },
+  { label: "Vecka 29", start: "2026-07-20", end: "2026-07-26" },
+  { label: "Vecka 30", start: "2026-07-27", end: "2026-08-02" },
+  { label: "Vecka 31", start: "2026-08-03", end: "2026-08-09" }
 ];
-const roundNames = ["Åttondelsfinal","16-delsfinal","Kvartsfinal","Semifinal","Final"];
 
-/* ====================== DATAMODELL (oförändrad logik) ====================== */
-let matches = [];
+const PASSES = [
+  { nr: 1, time: "08.30–10.00" },
+  { nr: 2, time: "10.00–11.30" },
+  { nr: 3, time: "11.30–13.00" },
+  { nr: 4, time: "13.00–14.30" },
+  { nr: 5, time: "14.30–16.00" },
+  { nr: 6, time: "16.00–17.30" }
+];
 
-function buildEmptyBracket(){
-  matches = [];
-  pairs.forEach((p, i)=>{
-    matches.push({id:`r0m${i}`, round:0, idx:i, teamA:p[0], teamB:p[1], scoreA:"", scoreB:"", winner:null});
-  });
-  let counts = [8,4,2,1];
-  for(let r=1; r<=4; r++){
-    for(let i=0;i<counts[r-1];i++){
-      matches.push({id:`r${r}m${i}`, round:r, idx:i, teamA:null, teamB:null, scoreA:"", scoreB:"", winner:null});
+const WEEKDAYS = ["söndag","måndag","tisdag","onsdag","torsdag","fredag","lördag"];
+const MONTHS = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+
+function parseDate(s){
+  const [y,m,d] = s.split("-").map(Number);
+  return new Date(y, m-1, d);
+}
+function addDays(date, n){
+  const d = new Date(date);
+  d.setDate(d.getDate()+n);
+  return d;
+}
+function fmtKey(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  const d = String(date.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+function fmtDisplay(date){
+  return `${WEEKDAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}
+
+function buildDays(){
+  const weeks = [];
+  for(const w of WEEKS){
+    const start = parseDate(w.start);
+    const end = parseDate(w.end);
+    const days = [];
+    let cur = start;
+    while(cur <= end){
+      days.push({ key: fmtKey(cur), display: fmtDisplay(cur) });
+      cur = addDays(cur,1);
     }
+    weeks.push({ label: w.label, range: `${w.start.slice(8)}–${w.end.slice(8)} ${MONTHS[parseDate(w.end).getMonth()]}`.replace(/^0/,""), days });
+  }
+  return weeks;
+}
+
+const WEEK_DATA = buildDays();
+const TOTAL_SLOTS = WEEK_DATA.reduce((a,w)=>a+w.days.length,0) * PASSES.length;
+
+let signups = {};
+let openWeekIndex = -1;
+
+function slotKey(dayKey, passNr){ return `${dayKey}__${passNr}`; }
+
+async function loadSignups(){
+  try{
+    const result = await window.storage.get("tannan-signups", true);
+    signups = result && result.value ? JSON.parse(result.value) : {};
+  }catch(e){
+    signups = {};
   }
 }
-function getMatch(id){ return matches.find(m=>m.id===id); }
-function nextInfo(m){
-  if(m.round===4) return null;
-  const nextRound = m.round+1;
-  const nextIdx = Math.floor(m.idx/2);
-  const slot = m.idx % 2 === 0 ? "A" : "B";
-  return {id:`r${nextRound}m${nextIdx}`, slot};
-}
-function clearDownstream(matchId){
-  const m = getMatch(matchId);
-  if(!m) return;
-  const info = nextInfo(m);
-  if(!info) return;
-  const next = getMatch(info.id);
-  if(!next) return;
-  if(info.slot==="A"){ next.teamA = null; } else { next.teamB = null; }
-  next.winner = null; next.scoreA=""; next.scoreB="";
-  clearDownstream(info.id);
-}
-function selectWinner(matchId, slot){
-  const m = getMatch(matchId);
-  const team = slot==="A" ? m.teamA : m.teamB;
-  if(!team) return;
-  m.winner = slot;
-  const info = nextInfo(m);
-  if(info){
-    const next = getMatch(info.id);
-    if(info.slot==="A") next.teamA = team; else next.teamB = team;
+
+async function saveSignups(){
+  try{
+    const result = await window.storage.set("tannan-signups", JSON.stringify(signups), true);
+    return !!result;
+  }catch(e){
+    return false;
   }
-  clearDownstream(matchId);
-  save();
-  render();
-}
-function setScore(matchId, slot, value){
-  const m = getMatch(matchId);
-  if(slot==="A") m.scoreA = value; else m.scoreB = value;
-  save();
 }
 
-/* ====================== GEOMETRI FÖR HJULET ====================== */
-const SIZE = 820;
-const CX = SIZE/2, CY = SIZE/2;
-const STEP = 360/32; // grader mellan varje av de 32 löven
-
-function leafAngle(i){ return i*STEP; }
-
-// vinkel (grader) för en match-nod, räknat rekursivt från löven
-const angleCache = {};
-function matchAngle(round, idx){
-  const key = round+"_"+idx;
-  if(angleCache[key]!==undefined) return angleCache[key];
-  let a;
-  if(round===0){
-    a = (leafAngle(2*idx) + leafAngle(2*idx+1))/2;
-  } else {
-    a = (matchAngle(round-1,2*idx) + matchAngle(round-1,2*idx+1))/2;
+function setStatus(msg, isError){
+  const el = document.getElementById("statusLine");
+  el.textContent = msg;
+  el.style.color = isError ? "#8E3E1B" : "#5C5A4F";
+  if(msg){
+    setTimeout(()=>{ if(el.textContent === msg) el.textContent = ""; }, 2500);
   }
-  angleCache[key]=a;
-  return a;
-}
-function teamAngle(round, idx, slot){ // slot 0=A,1=B
-  if(round===0) return leafAngle(2*idx+slot);
-  return matchAngle(round-1, 2*idx+slot);
-}
-function polar(r, deg){
-  const rad = (deg-90) * Math.PI/180; // -90 så 0° hamnar högst upp
-  return { x: CX + r*Math.cos(rad), y: CY + r*Math.sin(rad) };
 }
 
-const leafR  = [372, 322, 268, 214, 160];
-const nodeR  = [322, 268, 214, 160, 92];
-const arcR   = leafR.map((lr,i)=> lr - (lr-nodeR[i])*0.45);
-const iconR  = [15, 14, 12.5, 11, 10];
-
-/* ====================== RENDER: SVG-HJUL ====================== */
-function svgArc(p1, p2, r){
-  // medsols kort arc mellan p1 och p2 vid radie r
-  return `M ${p1.x.toFixed(1)},${p1.y.toFixed(1)} A ${r.toFixed(1)},${r.toFixed(1)} 0 0,1 ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
-}
-
-function renderWheel(){
-  let svgParts = [];
-  svgParts.push(`<defs>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#3a2f12" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#0b0b0d" stop-opacity="0"/>
-    </radialGradient>
-  </defs>`);
-
-  for(let r=0; r<=4; r++){
-    const roundMatches = matches.filter(m=>m.round===r);
-    roundMatches.forEach(m=>{
-      const angA = teamAngle(r, m.idx, 0);
-      const angB = teamAngle(r, m.idx, 1);
-      const mid = (angA+angB)/2;
-      const pA = polar(leafR[r], angA);
-      const pB = polar(leafR[r], angB);
-      const arcA = polar(arcR[r], angA);
-      const arcB = polar(arcR[r], angB);
-      const arcMid = polar(arcR[r], mid);
-      const nodePt = polar(nodeR[r], mid);
-
-      const decided = !!m.winner;
-      const lineColor = decided ? "var(--gold)" : "var(--line)";
-      const lineWidth = decided ? 2 : 1.3;
-
-      svgParts.push(`<g class="connector">
-        <line x1="${pA.x.toFixed(1)}" y1="${pA.y.toFixed(1)}" x2="${arcA.x.toFixed(1)}" y2="${arcA.y.toFixed(1)}" stroke="${lineColor}" stroke-width="${lineWidth}"/>
-        <line x1="${pB.x.toFixed(1)}" y1="${pB.y.toFixed(1)}" x2="${arcB.x.toFixed(1)}" y2="${arcB.y.toFixed(1)}" stroke="${lineColor}" stroke-width="${lineWidth}"/>
-        <path d="${svgArc(arcA,arcB,arcR[r])}" fill="none" stroke="${lineColor}" stroke-width="${lineWidth}"/>
-        <line x1="${arcMid.x.toFixed(1)}" y1="${arcMid.y.toFixed(1)}" x2="${nodePt.x.toFixed(1)}" y2="${nodePt.y.toFixed(1)}" stroke="${lineColor}" stroke-width="${lineWidth}"/>
-        <circle cx="${arcA.x.toFixed(1)}" cy="${arcA.y.toFixed(1)}" r="2.2" fill="${lineColor}"/>
-        <circle cx="${arcB.x.toFixed(1)}" cy="${arcB.y.toFixed(1)}" r="2.2" fill="${lineColor}"/>
-        <circle cx="${nodePt.x.toFixed(1)}" cy="${nodePt.y.toFixed(1)}" r="2.4" fill="${lineColor}"/>
-      </g>`);
-
-      svgParts.push(teamIconSVG(m, "A", pA, iconR[r]));
-      svgParts.push(teamIconSVG(m, "B", pB, iconR[r]));
-
-      // sista omgången: rita även mästar-ikonen vid centernoden
-      if(r===4 && m.winner){
-        const champ = m.winner==="A" ? m.teamA : m.teamB;
-        svgParts.push(championIconSVG(champ, nodePt));
-      }
-    });
-  }
-
-  // glow + trophy i mitten
-  svgParts.push(`<circle cx="${CX}" cy="${CY}" r="78" fill="url(#glow)"/>`);
-  svgParts.push(`<text x="${CX}" y="${CY+14}" text-anchor="middle" font-size="34">🏆</text>`);
-
-  const svg = `<svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg">${svgParts.join("")}</svg>`;
-  document.getElementById("wheelInner").innerHTML = svg;
-
-  // klick-events
-  document.querySelectorAll(".team-icon[data-match]").forEach(el=>{
-    el.addEventListener("click", ()=> selectWinner(el.dataset.match, el.dataset.slot));
-  });
-}
-
-function teamIconSVG(m, slot, pt, r){
-  const team = slot==="A" ? m.teamA : m.teamB;
-  if(!team){
-    return `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${(r*0.5).toFixed(1)}" fill="#222226" stroke="var(--line)" stroke-width="1"/>`;
-  }
-  const isWinner = m.winner===slot;
-  const isLoser = m.winner && m.winner!==slot;
-  const ringColor = isWinner ? "var(--gold)" : (isLoser ? "#444" : "#555");
-  const ringWidth = isWinner ? 2.4 : 1.2;
-  const opacity = isLoser ? 0.4 : 1;
-  const fontSize = r*1.25;
-  return `<g class="team-icon" data-match="${m.id}" data-slot="${slot}" opacity="${opacity}" transform="translate(${pt.x.toFixed(1)},${pt.y.toFixed(1)})">
-      <title>${team.n}</title>
-      <circle r="${r}" fill="#1c1c22" stroke="${ringColor}" stroke-width="${ringWidth}"/>
-      <text x="0" y="${fontSize*0.36}" text-anchor="middle" font-size="${fontSize}">${team.f}</text>
-    </g>`;
-}
-function championIconSVG(team, pt){
-  return `<g transform="translate(${pt.x.toFixed(1)},${pt.y.toFixed(1)})">
-      <circle r="20" fill="#2a2310" stroke="var(--gold)" stroke-width="3"/>
-      <text x="0" y="8" text-anchor="middle" font-size="22">${team.f}</text>
-    </g>`;
-}
-
-/* ====================== RENDER: RESULTATLISTA ====================== */
-function renderScoreList(){
-  const el = document.getElementById("scoreSection");
-  let html = "";
-  for(let r=0; r<=4; r++){
-    html += `<h2>${roundNames[r]}</h2>`;
-    matches.filter(m=>m.round===r).forEach(m=>{
-      const ready = m.teamA && m.teamB;
-      const rowClass = "score-row" + (ready ? "" : " pending");
-      const nameA = m.teamA ? `${m.teamA.f} ${m.teamA.n}` : "Väntar…";
-      const nameB = m.teamB ? `${m.teamB.f} ${m.teamB.n}` : "Väntar…";
-      const winA = m.winner==="A" ? "winner":"";
-      const winB = m.winner==="B" ? "winner":"";
-      html += `<div class="${rowClass}">
-        <div class="side">
-          <span class="nm ${winA}" data-click="${ready?`${m.id}|A`:''}" style="${ready?'cursor:pointer':''}">${nameA}</span>
-        </div>
-        <input type="number" min="0" max="20" data-score="${m.id}|A" value="${m.scoreA}" ${ready?'':'disabled'} placeholder="-"/>
-        <span class="vs">–</span>
-        <input type="number" min="0" max="20" data-score="${m.id}|B" value="${m.scoreB}" ${ready?'':'disabled'} placeholder="-"/>
-        <div class="side right">
-          <span class="nm ${winB}" data-click="${ready?`${m.id}|B`:''}" style="${ready?'cursor:pointer':''}">${nameB}</span>
-        </div>
-      </div>`;
-    });
-  }
-  el.innerHTML = html;
-
-  el.querySelectorAll("input[data-score]").forEach(inp=>{
-    inp.addEventListener("input", ()=>{
-      const [id,slot] = inp.dataset.score.split("|");
-      setScore(id, slot, inp.value);
-    });
-  });
-  el.querySelectorAll(".nm[data-click]").forEach(span=>{
-    if(!span.dataset.click) return;
-    span.addEventListener("click", ()=>{
-      const [id,slot] = span.dataset.click.split("|");
-      selectWinner(id, slot);
-    });
-  });
-}
-
-/* ====================== CHAMPION-BANNER ====================== */
-function renderChampionBanner(){
-  const final = getMatch("r4m0");
-  const banner = document.getElementById("championBanner");
-  const nameEl = document.getElementById("championName");
-  if(final && final.winner){
-    const champ = final.winner==="A" ? final.teamA : final.teamB;
-    nameEl.textContent = `${champ.f} ${champ.n}`;
-    banner.classList.add("show");
-  } else {
-    banner.classList.remove("show");
-  }
+function updateCounter(){
+  const filled = Object.keys(signups).length;
+  const digits = String(filled).padStart(3,"0").split("");
+  const odo = document.getElementById("odometer");
+  odo.innerHTML = digits.map(d=>`<div class="digit">${d}</div>`).join("");
+  document.getElementById("counterLabel").textContent = `pass bokade av ${TOTAL_SLOTS}`;
 }
 
 function render(){
-  renderWheel();
-  renderScoreList();
-  renderChampionBanner();
-}
+  const main = document.getElementById("main");
+  main.innerHTML = "";
 
-/* ====================== SPARA / DELA ====================== */
-const STORAGE_KEY = "vm2026-bracket-wheel-v1";
-function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(matches)); }catch(e){} }
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(Array.isArray(parsed) && parsed.length === matches.length){ matches = parsed; return true; }
-    }
-  }catch(e){}
-  return false;
-}
-function encodeState(){
-  const compact = matches.map(m=> (m.winner==="A"?"A":m.winner==="B"?"B":"-") + "|" + (m.scoreA||"") + "|" + (m.scoreB||"")).join(";");
-  return encodeURIComponent(btoa(unescape(encodeURIComponent(compact))));
-}
-function replaySelect(id, slot){
-  const m = getMatch(id);
-  const team = slot==="A"?m.teamA:m.teamB;
-  if(!team) return;
-  m.winner = slot;
-  const info = nextInfo(m);
-  if(info){
-    const next = getMatch(info.id);
-    if(info.slot==="A") next.teamA = team; else next.teamB = team;
-  }
-}
-function decodeState(str){
-  try{
-    const compact = decodeURIComponent(escape(atob(decodeURIComponent(str))));
-    const parts = compact.split(";");
-    if(parts.length !== matches.length) return false;
-    parts.forEach((p,i)=>{
-      const [w,sa,sb] = p.split("|");
-      matches[i].scoreA = sa||""; matches[i].scoreB = sb||"";
-      if(w==="A") replaySelect(matches[i].id,"A");
-      else if(w==="B") replaySelect(matches[i].id,"B");
+  WEEK_DATA.forEach((week, wi)=>{
+    const filledInWeek = week.days.reduce((a,d)=> a + PASSES.filter(p=>signups[slotKey(d.key,p.nr)]).length, 0);
+    const totalInWeek = week.days.length * PASSES.length;
+
+    const weekEl = document.createElement("div");
+    weekEl.className = "week" + (wi === openWeekIndex ? " open" : "");
+
+    const head = document.createElement("button");
+    head.className = "week-head";
+    head.innerHTML = `
+      <span class="week-title"><span class="label">${week.label}</span><span class="range">${week.range}</span></span>
+      <span style="display:flex; align-items:center; gap:0.7rem;">
+        <span class="week-meta">${filledInWeek}/${totalInWeek} bokade</span>
+        <span class="chev">▶</span>
+      </span>`;
+    head.addEventListener("click", ()=>{
+      openWeekIndex = (openWeekIndex === wi) ? -1 : wi;
+      render();
     });
-    return true;
-  }catch(e){ return false; }
-}
 
-document.getElementById("shareBtn").addEventListener("click", ()=>{
-  const url = location.origin + location.pathname + "#t=" + encodeState();
-  navigator.clipboard.writeText(url).then(()=>{
-    alert("Länk med dina tips kopierad! Skicka den till en kompis.");
-  }).catch(()=>{
-    prompt("Kopiera länken manuellt:", url);
+    const body = document.createElement("div");
+    body.className = "week-body";
+
+    week.days.forEach(day=>{
+      const dayEl = document.createElement("div");
+      dayEl.className = "day";
+
+      const dayHead = document.createElement("div");
+      dayHead.className = "day-head";
+      dayHead.textContent = day.display;
+      dayEl.appendChild(dayHead);
+
+      const list = document.createElement("div");
+      list.className = "pass-list";
+
+      PASSES.forEach(pass=>{
+        const key = slotKey(day.key, pass.nr);
+        const entry = signups[key];
+
+        const card = document.createElement("div");
+        card.className = "pass-card";
+
+        const head = document.createElement("div");
+        head.className = "pass-head";
+        head.innerHTML = `<span class="pnr">Pass ${pass.nr}</span><span>${pass.time}</span>`;
+        card.appendChild(head);
+
+        const body = document.createElement("div");
+
+        if(entry && entry.name){
+          body.innerHTML = `
+            <div class="slot-filled">
+              <div>
+                <span class="name">${escapeHtml(entry.name)}</span>
+                <div class="counts">
+                  Antal passager: ${entry.passages ? escapeHtml(entry.passages) : "—"}<br>
+                  Antal passagerare per bil: ${entry.perCar ? escapeHtml(entry.perCar) : "—"}<br>
+                  Antal bussar, tjänstefordon, IDP-fordon: ${entry.buses ? escapeHtml(entry.buses) : "—"}
+                </div>
+              </div>
+              <button class="remove-btn" type="button">ta bort</button>
+            </div>`;
+          body.querySelector(".remove-btn").addEventListener("click", async ()=>{
+            delete signups[key];
+            const ok = await saveSignups();
+            setStatus(ok ? "Borttaget." : "Kunde inte spara, försök igen.", !ok);
+            updateCounter();
+            render();
+          });
+        }else{
+          body.innerHTML = `
+            <div class="field-grid">
+              <div class="field field-full">
+                <label>Namn</label>
+                <input type="text" class="f-name" placeholder="Ditt namn" maxlength="40">
+              </div>
+              <div class="field">
+                <label>Antal passager</label>
+                <input type="text" class="f-passages" inputmode="numeric">
+              </div>
+              <div class="field">
+                <label>Antal passagerare per bil</label>
+                <input type="text" class="f-percar" inputmode="numeric">
+              </div>
+              <div class="field field-full">
+                <label>Antal bussar, tjänstefordon, IDP-fordon</label>
+                <input type="text" class="f-buses" inputmode="numeric">
+              </div>
+            </div>
+            <button class="save-btn" type="button">Spara</button>`;
+          const nameInput = body.querySelector(".f-name");
+          const passagesInput = body.querySelector(".f-passages");
+          const perCarInput = body.querySelector(".f-percar");
+          const busesInput = body.querySelector(".f-buses");
+          const btn = body.querySelector(".save-btn");
+          const doSave = async ()=>{
+            const name = nameInput.value.trim();
+            if(!name){ nameInput.focus(); return; }
+            btn.disabled = true;
+            signups[key] = {
+              name,
+              passages: passagesInput.value.trim(),
+              perCar: perCarInput.value.trim(),
+              buses: busesInput.value.trim()
+            };
+            const ok = await saveSignups();
+            if(ok){
+              setStatus(`Sparat: ${name} — pass ${pass.nr}, ${day.display}.`, false);
+              updateCounter();
+              render();
+            }else{
+              delete signups[key];
+              btn.disabled = false;
+              setStatus("Kunde inte spara, försök igen.", true);
+            }
+          };
+          btn.addEventListener("click", doSave);
+          [nameInput, passagesInput, perCarInput, busesInput].forEach(inp=>{
+            inp.addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSave(); });
+          });
+        }
+
+        card.appendChild(body);
+        list.appendChild(card);
+      });
+
+      dayEl.appendChild(list);
+      body.appendChild(dayEl);
+    });
+
+    weekEl.appendChild(head);
+    weekEl.appendChild(body);
+    main.appendChild(weekEl);
   });
-});
-document.getElementById("resetBtn").addEventListener("click", ()=>{
-  if(confirm("Nollställa hela schemat?")){
-    buildEmptyBracket();
-    save();
-    history.replaceState(null,"",location.pathname);
-    render();
-  }
-});
-
-/* ====================== INIT ====================== */
-buildEmptyBracket();
-const hash = location.hash;
-if(hash.startsWith("#t=")){
-  decodeState(hash.slice(3));
-  save();
-} else {
-  load();
 }
-render();
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function init(){
+  await loadSignups();
+  document.getElementById("loading").remove();
+  updateCounter();
+  render();
+}
+
+init();
 </script>
 </body>
 </html>
