@@ -147,18 +147,45 @@
   .week.open .week-body{ display:block; }
 
   .day{
-    margin: 0.85rem 0;
+    margin: 0.4rem 0;
   }
   .day-head{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 0.6rem;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.85rem;
     color: var(--green-deep);
     font-weight: 600;
-    margin: 0 0 0.4rem;
-    padding-top: 0.6rem;
+    margin: 0;
+    padding: 0.6rem 0.2rem;
     border-top: 1px dashed var(--line);
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    cursor: pointer;
+    text-align: left;
   }
-  .day:first-child .day-head{ border-top:none; padding-top:0; }
+  .day-head:hover{ color: var(--orange-deep); }
+  .day:first-child .day-head{ border-top:none; }
+  .day-meta{
+    display:flex;
+    align-items:center;
+    gap: 0.6rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+  }
+  .day-chev{
+    transition: transform 0.15s ease;
+    display:inline-block;
+  }
+  .day.open .day-chev{ transform: rotate(90deg); }
+  .day .pass-list{ display:none; }
+  .day.open .pass-list{ display:block; }
 
   .pass-card{
     padding: 0.7rem 0;
@@ -390,6 +417,7 @@ const TOTAL_SLOTS = WEEK_DATA.reduce((a,w)=>a+w.days.length,0) * PASSES.length;
 let signups = {};
 let openWeekIndex = -1;
 let editingKey = null;
+let openDays = new Set();
 
 function slotKey(dayKey, passNr){ return `${dayKey}__${passNr}`; }
 
@@ -465,11 +493,19 @@ function render(){
 
     week.days.forEach(day=>{
       const dayEl = document.createElement("div");
-      dayEl.className = "day";
+      dayEl.className = "day" + (openDays.has(day.key) ? " open" : "");
 
-      const dayHead = document.createElement("div");
+      const filledInDay = PASSES.filter(p => signups[slotKey(day.key,p.nr)] && signups[slotKey(day.key,p.nr)].name).length;
+
+      const dayHead = document.createElement("button");
       dayHead.className = "day-head";
-      dayHead.textContent = day.display;
+      dayHead.type = "button";
+      dayHead.innerHTML = `<span>${day.display}</span><span class="day-meta"><span class="day-count">${filledInDay}/${PASSES.length}</span><span class="day-chev">▶</span></span>`;
+      dayHead.addEventListener("click", ()=>{
+        if(openDays.has(day.key)) openDays.delete(day.key);
+        else openDays.add(day.key);
+        render();
+      });
       dayEl.appendChild(dayHead);
 
       const list = document.createElement("div");
